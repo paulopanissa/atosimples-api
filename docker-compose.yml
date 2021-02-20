@@ -1,0 +1,49 @@
+version: '3.7'
+services:
+  atosimples-app:
+    container_name: atosimples-app
+    build:
+      context: .
+      target: development
+    env_file:
+      - .env
+    volumes:
+      - '.:/app'
+      - /app/node_modules
+    ports:
+      - '${APP_PORT}:${APP_PORT}'
+    networks:
+      - ato-simples
+    depends_on:
+      - atosimples-postgres
+      - atosimples-redis
+    links:
+      - atosimples-postgres
+      - atosimples-redis
+    command: yarn start:dev
+  atosimples-postgres:
+    image: postgres
+    container_name: atosimples-postgres
+    environment:
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_USER: '${DB_USERNAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+      PG_DATA: /var/lib/postgresql/data
+    networks:
+      - ato-simples
+    ports:
+      - '25432:5432'
+    volumes:
+      - 'pgdata:/var/lib/postgresql/data'
+      - './.docker/init-database.sh:/docker-entrypoint-initdb.d/init-database.sh'
+  atosimples-redis:
+    image: redis
+    container_name: atosimples-redis
+    networks:
+      - ato-simples
+    ports:
+      - '26379:6379'
+networks:
+  ato-simples: null
+volumes:
+  pgdata: null
