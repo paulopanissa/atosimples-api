@@ -1,17 +1,24 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import validationSchema from '@/config/env'
 import { BullModule } from '@nestjs/bull';
-import DatabaseModule from '@/config/database';
+import { CoreModule } from './core/core.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import * as connectionOptions from '@/ormconfig'
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+console.log(connectionOptions)
+
+export function DatabaseOrmModule(): DynamicModule {
+  return TypeOrmModule.forRoot(connectionOptions)
+}
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       validationSchema
     }),
+    DatabaseOrmModule(),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -22,9 +29,9 @@ import { AppService } from './app.service';
         }
       })
     }),
-    DatabaseModule
+    CoreModule
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
